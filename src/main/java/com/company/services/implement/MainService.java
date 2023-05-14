@@ -2,6 +2,8 @@ package com.company.services.implement;
 
 import com.company.cards.Card;
 import com.company.comparator.CustomerNameComparator;
+import com.company.repository.AdminRepository;
+import com.company.repository.CustomerRepository;
 import com.company.services.MainServiceInterface;
 import com.company.user.Admin;
 import com.company.user.Customer;
@@ -52,7 +54,19 @@ public class MainService implements MainServiceInterface {
         System.out.println("Enter password: ");
         String password = in.nextLine();
 
-        User loggedUser = userService.getUserByEmailAndPassword(email, password);
+//        User loggedUser = userService.getUserByEmailAndPassword(email, password);
+        User loggedUser = new User();
+        AdminRepository adminRepository = new AdminRepository();
+        Admin adminUser = adminRepository.getAdminByEmailAndPassword(email, password);
+        CustomerRepository customerRepository = new CustomerRepository();
+        Customer customerUser = customerRepository.getCustomerByEmailAndPassword(email, password);
+        if(adminUser == null && customerUser != null){
+            loggedUser = customerUser;
+        }else if(adminUser != null && customerUser == null){
+            loggedUser = adminUser;
+        }else{
+            loggedUser = null;
+        }
 
         while(loggedUser == null)
         {
@@ -61,7 +75,13 @@ public class MainService implements MainServiceInterface {
             email = in.nextLine();
             System.out.println("Enter password: ");
             password = in.nextLine();
-            loggedUser = userService.getUserByEmailAndPassword(email, password);
+            adminUser = adminRepository.getAdminByEmailAndPassword(email, password);
+            customerUser = customerRepository.getCustomerByEmailAndPassword(email, password);
+            if(adminUser == null && customerUser != null){
+                loggedUser = customerUser;
+            }else if(adminUser != null && customerUser == null){
+                loggedUser = adminUser;
+            }
         }
         auditService.writeActionInCsv("user logged in");
         if(Objects.equals(loggedUser.getTypeOfUser(), "customer")){
@@ -94,12 +114,12 @@ public class MainService implements MainServiceInterface {
         {
             if (Objects.equals(command, "1"))
             {
-                cardService.createStandardCard_(customer.getUniqueId());
+                cardService.createStandardCard_((int) customer.getUniqueId());
                 break;
             }
             else if (Objects.equals(command, "2"))
             {
-                cardService.createPremiumCard_(customer.getUniqueId());
+                cardService.createPremiumCard_((int) customer.getUniqueId());
                 break;
             }
             else
@@ -128,44 +148,21 @@ public class MainService implements MainServiceInterface {
     }
     @Override
     public void deleteAccount(Admin loggedAdmin){
-        ArrayList<Customer> customers = new ArrayList<>();
 
-        CsvReaderService csvReaderService = CsvReaderService.getInstance();
-        List<String[]> customersList = csvReaderService.readCustomersFromCsv();
-        for (int i = 0;i <customersList.size();i++) {
-            Customer customer = (Customer) userService.getUsers().get(i);
-            customers.add(customer);
-        }
-        System.out.println("Choose a number between 0 and " + (customersList.size() - 1));
-        int index = 0;
-        for(Customer customer: customers){
-            System.out.print(index + " ");
-            System.out.println(customer.getFirstName() + " " + customer.getLastName());
-            index += 1;
+        AdminRepository adminRepository = new AdminRepository();
+        ArrayList<Customer> customers = adminRepository.displayCustomers();
+
+        System.out.println("Choose a number");
+        for(int i = 0;i<customers.size();i++){
+            System.out.print(customers.get(i).getUniqueId() + " ");
+            System.out.println(customers.get(i).getFirstName() + " " + customers.get(i).getLastName());
         }
 
         Scanner in = new Scanner(System.in);
         int command = in.nextInt();
 
-        String csvFile = "src\\main\\java\\com\\company\\resources\\customers.csv";
-        try{
-            CSVReader reader = new CSVReader(new FileReader(csvFile));
-            String[] header = reader.readNext();
-            List<String[]> rows = reader.readAll();
-            reader.close();
-
-            rows.remove(command);
-
-            FileWriter writer = new FileWriter(csvFile);
-            writer.append("Firstname,Lastname,Email,Password,CNP,Phonenumber\n");
-
-            for(int i=0;i<rows.size();i++){
-                writer.append(rows.get(i)[0]).append(",").append(rows.get(i)[1]).append(",").append(rows.get(i)[2]).append(",").append(rows.get(i)[3]).append(",").append(rows.get(i)[4]).append(",").append(rows.get(i)[5]).append("\n");
-            }
-            writer.close();
-        }catch (IOException | CsvException e){
-            e.printStackTrace();
-        }
+        CustomerRepository customerRepository = new CustomerRepository();
+        customerRepository.deleteCustomerById(command);
 
         adminMenu(loggedAdmin);
     }
@@ -316,16 +313,8 @@ public class MainService implements MainServiceInterface {
                 switch (command)
                 {
                     case "1" -> {
-
-                        ArrayList<Customer> customersSorted = new ArrayList<>();
-
-                        CsvReaderService csvReaderService = CsvReaderService.getInstance();
-                        List<String[]> customersList = csvReaderService.readCustomersFromCsv();
-                        for (int i = 0;i <customersList.size();i++) {
-                            Customer customer = (Customer) userService.getUsers().get(i);
-                            customersSorted.add(customer);
-                        }
-
+                        AdminRepository adminRepository = new AdminRepository();//                        ArrayList<Customer> customersSorted = new ArrayList<>();
+                        ArrayList<Customer> customersSorted = adminRepository.displayCustomers();
                         Collections.sort(customersSorted, new CustomerNameComparator());
                         System.out.println("Afisare in ordina crescatoare dupa First Name:");
                         for (Customer customer : customersSorted) {
