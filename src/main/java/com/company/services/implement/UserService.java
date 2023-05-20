@@ -1,5 +1,8 @@
 package com.company.services.implement;
 
+import com.company.config.DatabaseConfiguration;
+import com.company.repository.AdminRepository;
+import com.company.repository.CustomerRepository;
 import com.company.services.UserServiceInterface;
 import com.company.user.Admin;
 import com.company.user.Customer;
@@ -123,23 +126,46 @@ public class UserService implements UserServiceInterface {
         Customer newCustomer = createCustomer(firstName, lastName, email, password, cnp, phoneNumber);
         users.add(newCustomer);
 
+        CustomerRepository customerRepository = new CustomerRepository();
+        customerRepository.createTable();
+        customerRepository.addCustomer(firstName, lastName, email, password, cnp, phoneNumber);
+
+        DatabaseConfiguration.closeDatabaseConnection();
+
         // add to csv
         csvWriterService.writeCustomerInCsv(newCustomer);
     }
 
     public void createAdminAccount() throws ParseException, FileNotFoundException {
         Scanner in = new Scanner(System.in);
-        String firstName, lastName, email, password, cnp, phoneNumber;
+        String firstName, lastName, email, password;
 
         System.out.println("First name: ");
         firstName = in.nextLine();
         System.out.println("Last name: ");
         lastName = in.nextLine();
+
         System.out.println("Email address: ");
         email = in.nextLine();
+
+        String regexPattern = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+)*@"
+                + "[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
+        Pattern patternEmail = Pattern.compile(regexPattern);
+        Matcher matcherEmail = patternEmail.matcher(email);
+        if(!matcherEmail.matches())
+        {
+            System.out.println("Invalid email!");
+            return;
+        }
+
         System.out.println("Password: ");
         password = in.nextLine();
 
+        AdminRepository adminRepository = new AdminRepository();
+        adminRepository.createTable();
+        adminRepository.addAdmin(firstName, lastName, email, password);
+
+        DatabaseConfiguration.closeDatabaseConnection();
 
         Admin newAdmin = createAdmin(firstName, lastName, email, password);
         users.add(newAdmin);

@@ -24,8 +24,8 @@ public interface CardServiceInterface {
     public void depositCash(double amount, Customer loggedCustomer);
 
 
-    public void createStandardCard_(long uniqueId) throws ParseException, FileNotFoundException;
-    public void createPremiumCard_(long uniqueId) throws ParseException, FileNotFoundException;
+    public void createStandardCard_(Integer uniqueId) throws ParseException, FileNotFoundException;
+    public void createPremiumCard_(Integer uniqueId) throws ParseException, FileNotFoundException;
 
     public void viewCardDetails(Customer customer);
 

@@ -3,15 +3,14 @@ package com.company.services.implement;
 import com.company.cards.Card;
 import com.company.cards.PremiumCard;
 import com.company.cards.StandardCard;
+import com.company.repository.PremiumCardRepository;
+import com.company.repository.StandardCardRepository;
 import com.company.services.CardServiceInterface;
 import com.company.user.Customer;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -19,7 +18,7 @@ import java.util.*;
 public class CardService implements CardServiceInterface {
     private static CardService instance;
 
-    private final List<Card> cards = new ArrayList<>();
+    private List<Card> cards = new ArrayList<>();
 
     CsvReaderService csvReaderService = CsvReaderService.getInstance();
     CsvWriterService csvWriterService = CsvWriterService.getInstance();
@@ -43,23 +42,21 @@ public class CardService implements CardServiceInterface {
     }
 
     public void readCardsFromCsv() throws ParseException {
-        List<String[]> standardCardList = csvReaderService.readStandardCardsFromCsv();
-        for (String[] strings : standardCardList) {
+        StandardCardRepository standardCardRepository = new StandardCardRepository();
+        standardCardRepository.createTable();
+        ArrayList<StandardCard> standardCards =  standardCardRepository.displayStandardCards();
 
-            String sDate = strings[2];
-            Date date = new SimpleDateFormat("dd/MM/yyyy").parse(sDate);
-
-            StandardCard newStandardCard = createStandardCard(Long.parseLong(strings[0]), strings[1], date, Double.parseDouble(strings[3]), Double.parseDouble(strings[4]));
+        for (int i = 0;i<standardCards.size();i++) {
+            StandardCard newStandardCard = createStandardCard(standardCards.get(i).getUserUniqueId(), standardCards.get(i).getCardNumber(), standardCards.get(i).getExpirationDate(), standardCards.get(i).getAmount(), standardCards.get(i).getWithdrawFee());
             cards.add(newStandardCard);
         }
 
-        List<String[]> premiumCardList = csvReaderService.readPremiumCardsFromCsv();
-        for (String[] strings : premiumCardList) {
+        PremiumCardRepository premiumCardRepository = new PremiumCardRepository();
+        premiumCardRepository.createTable();
+        ArrayList<PremiumCard> premiumCards =  premiumCardRepository.displayPremiumCards();
 
-            String sDate = strings[2];
-            Date date = new SimpleDateFormat("dd/MM/yyyy").parse(sDate);
-
-            PremiumCard newPremiumCard = createPremiumCard(Long.parseLong(strings[0]), strings[1], date, Double.parseDouble(strings[3]), Double.parseDouble(strings[4]));
+        for (int i = 0;i<premiumCards.size();i++) {
+            PremiumCard newPremiumCard = createPremiumCard(premiumCards.get(i).getUserUniqueId(), premiumCards.get(i).getCardNumber(), premiumCards.get(i).getExpirationDate(), premiumCards.get(i).getAmount(), premiumCards.get(i).getCashBack());
             cards.add(newPremiumCard);
         }
     }
@@ -173,6 +170,13 @@ public class CardService implements CardServiceInterface {
             if (card.getUserUniqueId() == loggedCustomer.getUniqueId()) {
                 if (cardIndex == command) {
                     // increment the amount
+                    if(card instanceof StandardCard){
+                        StandardCardRepository standardCardRepository = new StandardCardRepository();
+                        standardCardRepository.updateAmountStandardCard((int) loggedCustomer.getUniqueId(), card.getCardNumber(), card.getAmount() + amount);
+                    }else{
+                        PremiumCardRepository premiumCardRepository = new PremiumCardRepository();
+                        premiumCardRepository.updateAmountPremiumCard((int) loggedCustomer.getUniqueId(), card.getCardNumber(), card.getAmount() + amount);
+                    }
                     card.setAmount(card.getAmount() + amount);
                     break;
                 } else cardIndex++;
@@ -227,21 +231,26 @@ public class CardService implements CardServiceInterface {
             if (card.getUserUniqueId() == loggedCustomer.getUniqueId()) {
                 if (cardIndex == command) {
                     if(card instanceof StandardCard){
-                        double creditWithComission = ((StandardCard)card).getAmount() - amount - ((StandardCard) card).getWithdrawFee()/100*amount;
+                        Double creditWithComission = ((StandardCard)card).getAmount() - amount - ((StandardCard) card).getWithdrawFee()/100*amount;
                         if(((StandardCard)card).getAmount() < amount){
                             System.out.println("Insufficient funds");
                             return;
                         }else{
+                            StandardCardRepository standardCardRepository = new StandardCardRepository();
+                            standardCardRepository.updateAmountStandardCard((int) loggedCustomer.getUniqueId(), card.getCardNumber(), creditWithComission);
                             card.setAmount(creditWithComission);
                         }
                     } else if (card instanceof PremiumCard) {
-                        double new_cashback;
+                        Double new_cashback;
                         if(((PremiumCard)card).getAmount() < amount){
                             System.out.println("Insufficient funds");
                             return;
                         }else{
-                            double newCredit = ((PremiumCard)card).getAmount() - amount;
+                            Double newCredit = ((PremiumCard)card).getAmount() - amount;
                             new_cashback = (((PremiumCard)card).getCashBack() / 100) * amount;
+
+                            PremiumCardRepository premiumCardRepository = new PremiumCardRepository();
+                            premiumCardRepository.updateAmountPremiumCard((int) loggedCustomer.getUniqueId(), card.getCardNumber(), newCredit + new_cashback);
                             card.setAmount(newCredit + new_cashback);
                         }
                     }
@@ -301,24 +310,26 @@ public class CardService implements CardServiceInterface {
 
     }
 
+    public static String generateNumberString(int length) {
+        StringBuilder sb = new StringBuilder(length);
 
-    public void createStandardCard_(long uniqueId) throws ParseException, FileNotFoundException {
+        for (int i = 0; i < length; i++) {
+            sb.append((int) (Math.random() * 10)); // append a random number (0-9)
+        }
+
+        return sb.toString();
+    }
+
+
+    public void createStandardCard_(Integer uniqueId) throws ParseException, FileNotFoundException {
         Random rand = new Random();
         int rand_month = rand.nextInt(1,13); // generate random month for exp date
 
-
-
         Scanner in = new Scanner(System.in);
-        StringBuilder cardNumber = new StringBuilder();
-        Date expirationDate = new Date(2025, rand_month, 1);
+        String cardNumber = generateNumberString(10);
+        java.sql.Date expirationDate = new java.sql.Date(2025, rand_month, 1);
 
-        double amount, withdrawFee;
-
-        for(int i = 0; i < 16; i++)
-        {
-            int rand_number = rand.nextInt(9);
-            cardNumber.append(rand_number);
-        }
+        Double amount, withdrawFee;
 
         System.out.println("Amount to deposit ($): ");
         amount = Double.parseDouble(in.nextLine());
@@ -326,38 +337,66 @@ public class CardService implements CardServiceInterface {
         withdrawFee = Double.parseDouble(in.nextLine());
 
 
-        StandardCard newStandardCard = createStandardCard(uniqueId, String.valueOf(cardNumber), expirationDate, amount, withdrawFee);
-        cards.add(newStandardCard);
+        StandardCardRepository standardCardRepository = new StandardCardRepository();
+        standardCardRepository.createTable();
+        standardCardRepository.addStandardCard(uniqueId, cardNumber, (java.sql.Date) expirationDate, amount, withdrawFee);
 
-        // add to csv
-        csvWriterService.writeStandardCardInCsv(newStandardCard);
+
+        ArrayList<StandardCard> standardCards =  standardCardRepository.displayStandardCards();
+        cards = new ArrayList<>();
+
+        for (int i = 0;i<standardCards.size();i++) {
+            StandardCard newStandardCard = createStandardCard(standardCards.get(i).getUserUniqueId(), standardCards.get(i).getCardNumber(), standardCards.get(i).getExpirationDate(), standardCards.get(i).getAmount(), standardCards.get(i).getWithdrawFee());
+            cards.add(newStandardCard);
+        }
+
+        PremiumCardRepository premiumCardRepository = new PremiumCardRepository();
+        premiumCardRepository.createTable();
+        ArrayList<PremiumCard> premiumCards =  premiumCardRepository.displayPremiumCards();
+
+        for (int i = 0;i<premiumCards.size();i++) {
+            PremiumCard newPremiumCard = createPremiumCard(premiumCards.get(i).getUserUniqueId(), premiumCards.get(i).getCardNumber(), premiumCards.get(i).getExpirationDate(), premiumCards.get(i).getAmount(), premiumCards.get(i).getCashBack());
+            cards.add(newPremiumCard);
+        }
+        System.out.println(cards.size());
     }
-    public void createPremiumCard_(long uniqueId) throws ParseException, FileNotFoundException {
+    public void createPremiumCard_(Integer uniqueId) throws ParseException, FileNotFoundException {
         Random rand = new Random();
         int rand_month = rand.nextInt(1,13); // generate random month for exp date
 
         Scanner in = new Scanner(System.in);
-        StringBuilder cardNumber = new StringBuilder();
-        Date expirationDate = new Date(2025, rand_month, 1);
+        String cardNumber = generateNumberString(10);
+        java.sql.Date expirationDate = new java.sql.Date(2025, rand_month, 1);
 
-        double amount, cashBack;
-
-        for(int i = 0; i < 16; i++)
-        {
-            int rand_number = rand.nextInt(9);
-            cardNumber.append(rand_number);
-        }
+        Double amount, cashBack;
 
         System.out.println("Amount to deposit ($): ");
         amount = Double.parseDouble(in.nextLine());
-        System.out.println("Cashback  (%): ");
+        System.out.println("Cashback (%): ");
         cashBack = Double.parseDouble(in.nextLine());
 
-        PremiumCard newPremiumCard = createPremiumCard(uniqueId, String.valueOf(cardNumber), expirationDate, amount, cashBack);
-        cards.add(newPremiumCard);
 
-        // add to csv
-        csvWriterService.writePremiumCardInCsv(newPremiumCard);
+        PremiumCardRepository premiumCardRepository = new PremiumCardRepository();
+        premiumCardRepository.createTable();
+        premiumCardRepository.addPremiumCard(uniqueId, cardNumber, (java.sql.Date) expirationDate, amount, cashBack);
+
+
+        ArrayList<PremiumCard> premiumCards =  premiumCardRepository.displayPremiumCards();
+        cards = new ArrayList<>();
+
+        for (int i = 0;i<premiumCards.size();i++) {
+            PremiumCard newPremiumCard = createPremiumCard(premiumCards.get(i).getUserUniqueId(), premiumCards.get(i).getCardNumber(), premiumCards.get(i).getExpirationDate(), premiumCards.get(i).getAmount(), premiumCards.get(i).getCashBack());
+            cards.add(newPremiumCard);
+        }
+
+        StandardCardRepository standardCardRepository = new StandardCardRepository();
+        standardCardRepository.createTable();
+        ArrayList<StandardCard> standardCards =  standardCardRepository.displayStandardCards();
+
+        for (int i = 0;i<standardCards.size();i++) {
+            StandardCard newStandardCard = createStandardCard(standardCards.get(i).getUserUniqueId(), standardCards.get(i).getCardNumber(), standardCards.get(i).getExpirationDate(), standardCards.get(i).getAmount(), standardCards.get(i).getWithdrawFee());
+            cards.add(newStandardCard);
+        }
     }
 
     public void viewCardDetails(Customer customer)

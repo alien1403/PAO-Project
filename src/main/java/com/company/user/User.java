@@ -2,12 +2,20 @@ package com.company.user;
 
 public class User
 {
-    private long uniqueId;
+    public long uniqueId;
     private String typeOfUser;
     private String firstName;
     private String lastName;
     private String email;
     private String password;
+    public User(){
+        this.uniqueId = 0;
+        this.typeOfUser = "";
+        this.firstName = "";
+        this.lastName = "";
+        this.email = "";
+        this.password = "";
+    }
 
     public User(long uniqueId, String typeOfUser, String firstName, String lastName, String email, String password) {
         this.uniqueId = uniqueId;
@@ -20,6 +28,9 @@ public class User
 
     public long getUniqueId() {
         return uniqueId;
+    }
+    public void incrementUniqueId(){
+        this.uniqueId += 1;
     }
 
     public void setUniqueId(long uniqueId) {
