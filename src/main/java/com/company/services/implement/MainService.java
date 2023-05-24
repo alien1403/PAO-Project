@@ -37,8 +37,8 @@ public class MainService implements MainServiceInterface {
     }
     @Override
     public void readFromCsv() throws ParseException {
-        userService.readUsersFromCsv();
-        cardService.readCardsFromCsv();
+//        userService.readUsersFromCsv();
+//        cardService.readCardsFromCsv();
 
         // after reading go to log in menu
         loginMenu();

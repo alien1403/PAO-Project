@@ -289,3 +289,6 @@ customer show details,Sun May 14 19:38:32 EEST 2023
 deposit cash,Sun May 14 19:38:41 EEST 2023
 withdraw cash,Sun May 14 19:38:50 EEST 2023
 customer show details,Sun May 14 19:38:53 EEST 2023
+user logged in,Wed May 24 10:08:36 EEST 2023
+print expired cards,Wed May 24 10:09:04 EEST 2023
+print available cards,Wed May 24 10:09:05 EEST 2023

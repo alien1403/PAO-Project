@@ -259,52 +259,52 @@ public class CardService implements CardServiceInterface {
             }
         }
 
-        String csvFileStandard = "src\\main\\java\\com\\company\\resources\\standardcards.csv";
-        String csvFilePremium = "src\\main\\java\\com\\company\\resources\\premiumcards.csv";
-        try{
-            CSVReader readerStandard = new CSVReader(new FileReader(csvFileStandard));
-            String[] headerStandard = readerStandard.readNext();
-            List<String[]> rowsStandard = readerStandard.readAll();
-            readerStandard.close();
-
-            FileWriter writerStandard = new FileWriter(csvFileStandard);
-            writerStandard.append("userId,CardNumber,ExpirationDate,Amount,WithdrawFee\n");
-
-            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-
-            for(Card card: cards){
-                if(card instanceof StandardCard){
-                    String strDate = formatter.format(card.getExpirationDate());
-                    writerStandard.append(String.valueOf(((StandardCard) card).getUserUniqueId())).append(",").append(((StandardCard) card).getCardNumber()).append(",").append(strDate).append(",").append(String.valueOf(((StandardCard) card).getAmount())).append(",").append(String.valueOf(((StandardCard) card).getWithdrawFee())).append("\n");
-                }
-            }
-
-            writerStandard.close();
-
-            CSVReader readerPremium = new CSVReader(new FileReader(csvFilePremium));
-            String[] headerPremium = readerPremium.readNext();
-            List<String[]> rowsPremium = readerPremium.readAll();
-            readerPremium.close();
-
-            FileWriter writerPremium = new FileWriter(csvFilePremium);
-            writerPremium.append("userId,CardNumber,ExpirationDate,Amount,Cashback\n");
-
-            SimpleDateFormat formatterPremium = new SimpleDateFormat("dd/MM/yyyy");
-
-            for(Card card: cards){
-                if(card instanceof PremiumCard){
-                    String strDate = formatter.format(card.getExpirationDate());
-                    writerPremium.append(String.valueOf(((PremiumCard) card).getUserUniqueId())).append(",").append(((PremiumCard) card).getCardNumber()).append(",").append(strDate).append(",").append(String.valueOf(((PremiumCard) card).getAmount())).append(",").append(String.valueOf(((PremiumCard) card).getCashBack())).append("\n");
-                }
-            }
-
-            writerPremium.close();
-
-
-
-        }catch (IOException | CsvException e){
-            e.printStackTrace();
-        }
+//        String csvFileStandard = "src\\main\\java\\com\\company\\resources\\standardcards.csv";
+//        String csvFilePremium = "src\\main\\java\\com\\company\\resources\\premiumcards.csv";
+//        try{
+//            CSVReader readerStandard = new CSVReader(new FileReader(csvFileStandard));
+//            String[] headerStandard = readerStandard.readNext();
+//            List<String[]> rowsStandard = readerStandard.readAll();
+//            readerStandard.close();
+//
+//            FileWriter writerStandard = new FileWriter(csvFileStandard);
+//            writerStandard.append("userId,CardNumber,ExpirationDate,Amount,WithdrawFee\n");
+//
+//            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+//
+//            for(Card card: cards){
+//                if(card instanceof StandardCard){
+//                    String strDate = formatter.format(card.getExpirationDate());
+//                    writerStandard.append(String.valueOf(((StandardCard) card).getUserUniqueId())).append(",").append(((StandardCard) card).getCardNumber()).append(",").append(strDate).append(",").append(String.valueOf(((StandardCard) card).getAmount())).append(",").append(String.valueOf(((StandardCard) card).getWithdrawFee())).append("\n");
+//                }
+//            }
+//
+//            writerStandard.close();
+//
+//            CSVReader readerPremium = new CSVReader(new FileReader(csvFilePremium));
+//            String[] headerPremium = readerPremium.readNext();
+//            List<String[]> rowsPremium = readerPremium.readAll();
+//            readerPremium.close();
+//
+//            FileWriter writerPremium = new FileWriter(csvFilePremium);
+//            writerPremium.append("userId,CardNumber,ExpirationDate,Amount,Cashback\n");
+//
+//            SimpleDateFormat formatterPremium = new SimpleDateFormat("dd/MM/yyyy");
+//
+//            for(Card card: cards){
+//                if(card instanceof PremiumCard){
+//                    String strDate = formatter.format(card.getExpirationDate());
+//                    writerPremium.append(String.valueOf(((PremiumCard) card).getUserUniqueId())).append(",").append(((PremiumCard) card).getCardNumber()).append(",").append(strDate).append(",").append(String.valueOf(((PremiumCard) card).getAmount())).append(",").append(String.valueOf(((PremiumCard) card).getCashBack())).append("\n");
+//                }
+//            }
+//
+//            writerPremium.close();
+//
+//
+//
+//        }catch (IOException | CsvException e){
+//            e.printStackTrace();
+//        }
 
 
 

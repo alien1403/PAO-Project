@@ -26,7 +26,7 @@ public class CsvReaderService implements CsvReaderServiceInterface {
         String splitBy = ",";
         try {
             //parsing a CSV file into BufferedReader class constructor
-            BufferedReader br = new BufferedReader(new FileReader("src\\main\\java\\com\\company\\resources\\customers.csv"));
+            BufferedReader br = new BufferedReader(new FileReader("\\home\\alien14\\Projects\\Proiect PAO\\src\\main\\java\\com\\company\\resources\\customers.csv"));
             br.readLine(); // read header
             while ((line = br.readLine()) != null)
             //returns a Boolean value
