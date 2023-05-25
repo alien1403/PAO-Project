@@ -21,7 +21,8 @@ public class AuditService implements AuditServiceInterface
 
     public void writeActionInCsv(String action) throws FileNotFoundException
     {
-        File csvOutputFile = new File("src\\main\\java\\com\\company\\resources\\audit.csv");
+        System.out.println("AUDIT!");
+        File csvOutputFile = new File("/home/alien14/Projects/Proiect PAO/src/main/java/com/company/resources/audit.csv");
 
         SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date currentDateAndTime = new Date(System.currentTimeMillis());
